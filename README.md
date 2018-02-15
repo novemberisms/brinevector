@@ -1,5 +1,6 @@
 # brinevector
 A simple vector lua library for everyone!
+
 ### Motivation
 While looking for vector libraries for lua, I noticed most of them use tables to store the vectors themselves. This might be fine for most applications, but for games and high-performance uses, creating a table for every vector is simply too much overhead. Using C data to store and create vectors with the `ffi` library in luajit is a much more efficient method that can produce code that performs much faster and consumes a lot less memory. ([Depending on the application, around 35x less memory, and 20x better performance!](http://luajit.org/ext_ffi.html))
 
@@ -23,6 +24,17 @@ You can replace `Vector` with any name you wish to use. Even `V`, for brevity. I
 [Here](https://github.com/novemberisms/brinevector/blob/master/cheatsheet.md) is an overview of all the features, properties, and methods of this library all in one place, and for most people, is everything they need to use this library. 
 
 For beginners, or for anyone who wants more details, read the sections down below.
+
+## Contents
+-	[Instantiating a vector](#Instantiating-a-vector)
+-	[Accessing a vector's components](#Accessing-a-vector's-components)
+	-	[Getting](#Getting)
+	-	[Setting](#Setting)
+-	[Printing a Vector](#Printing-a-vector)
+-	[Vector Arithmetic](#Vector-Arithmetic)
+	-	[Addition and Subtraction](#Addition-and-Subtraction)
+	-	[Multiplication with a scalar](#Multiplication-with-a-scalar)
+	-	[Multiplication with another vector](#Multiplication-with-another-vector)
 ## Instantiating a vector
 To create a new vector, just call the module directly
 ```lua
