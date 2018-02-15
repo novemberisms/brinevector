@@ -24,7 +24,7 @@ ffi.cdef[[
 typedef struct {
   float x;
   float y;
-} vector;
+} brinevector;
 ]]
 
 local Vector = {}
@@ -115,7 +115,7 @@ function Vector.axes(order)
 end
 
 function Vector.isVector(arg)
-  return ffi.istype("vector",arg)
+  return ffi.istype("brinevector",arg)
 end
 
 function Vector.__add(v1, v2)
@@ -149,7 +149,7 @@ function Vector.__unm(v)
 end
 
 function Vector.__eq(v1,v2)
-  if (not ffi.istype("vector",v2)) or (not ffi.istype("vector",v1)) then return false end
+  if (not ffi.istype("brinevector",v2)) or (not ffi.istype("brinevector",v1)) then return false end
   return v1.x == v2.x and v1.y == v2.y
 end
 
@@ -162,9 +162,9 @@ function Vector.__tostring(t)
 end
 
 function Vector.__call(t,x,y)
-  return ffi.new("vector",x,y)
+  return ffi.new("brinevector",x or 0,y or 0)
 end
 
-ffi.metatype("vector",Vector)
+ffi.metatype("brinevector",Vector)
 
 return Vector
