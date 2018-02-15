@@ -26,15 +26,15 @@ You can replace `Vector` with any name you wish to use. Even `V`, for brevity. I
 For beginners, or for anyone who wants more details, read the sections down below.
 
 ## Contents
--	[Instantiating a vector](#Instantiating-a-vector)
--	[Accessing a vector's components](#Accessing-a-vector's-components)
-	-	[Getting](#Getting)
-	-	[Setting](#Setting)
--	[Printing a Vector](#Printing-a-vector)
--	[Vector Arithmetic](#Vector-Arithmetic)
-	-	[Addition and Subtraction](#Addition-and-Subtraction)
-	-	[Multiplication with a scalar](#Multiplication-with-a-scalar)
-	-	[Multiplication with another vector](#Multiplication-with-another-vector)
+-	[Instantiating a vector](#instantiating-a-vector)
+-	[Accessing a vector's components](#accessing-a-vectors-components)
+	-	[Getting](#getting)
+	-	[Setting](#setting)
+-	[Printing a Vector](#printing-a-vector)
+-	[Vector Arithmetic](#vector-arithmetic)
+	-	[Addition and Subtraction](#addition-and-Subtraction)
+	-	[Multiplication with a scalar](#multiplication-with-a-scalar)
+	-	[Multiplication with another vector](#multiplication-with-another-vector)
 ## Instantiating a vector
 To create a new vector, just call the module directly
 ```lua
