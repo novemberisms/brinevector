@@ -24,20 +24,28 @@ Here is an overview of all the features, properties, and methods of this library
 
 ##### Basic
 ```lua
-local Vector = require "brinevector"	-- assign a namespace
+-- assign a namespace
+local Vector = require "brinevector"  
 
-local myVec = Vector(3,4)				-- declare a new vector
+-- declare a new vector
+local myVec = Vector(3,4) 
 
-print(myVector)							-- print and tostring
+-- print and tostring
+print(myVector) 
+-> "Vector{3.0000,4.0000}"
+tostring(myVector)
 -> "Vector{3.0000,4.0000}"
 
-myVec.x									-- access x component
+-- access x component
+myVec.x
 -> 3
 
-myVec.y									-- access y component
+-- access y component
+myVec.y									
 -> 4
 
-myVec.x = -100							-- modifying a vector
+-- modifying a vector
+myVec.x = -100							
 myVec.y = 25.5
 print(myVec)
 -> "Vector{-100.0000,25.5000}"
@@ -47,97 +55,122 @@ print(myVec)
 local a = Vector(1,2)
 local b = Vector(3,4)
 
-a + b									-- addition
+-- addition
+a + b									
 -> "Vector{4.0000,6.0000}"
 
-a - b									-- subtraction
+-- subtraction
+a - b									
 -> "Vector{-2.0000,-2.0000}"
 
-a * 2									-- scalar multiplication
+-- scalar multiplication
+a * 2									
 -> "Vector{2.0000,4.0000}"
 
-a * b									-- dot multiplication
+-- dot multiplication
+a * b									
 -> 11
 
-a % b									-- componentwise multiplication
+-- componentwise multiplication
+a % b									
 -> "Vector{3.0000,8.0000}
 
-a / 2									-- scalar division
+-- scalar division
+a / 2									
 -> "Vector{0.5000,1.0000}"				
 
--a										-- unary negation
+-- unary negation
+-a										
 -> "Vector{-1.0000,-2.0000}"
 ```
 ##### Properties
 ```lua
 myVec = Vector(3,4)
 
-myVec.length							-- get length property
+-- get length property
+myVec.length							
 -> 5
 
-myVec = Vector(6,8)						-- no need for methods like myVec:length()
+-- no need for methods like myVec:length()
+myVec = Vector(6,8)						
 myVec.length
 -> 10
 
-myVec.angle								-- get angle in radians
+-- get angle in radians
+myVec.angle								
 -> 0.92729521800161219
 
-myVec.normalized						-- get normalized vector
+-- get normalized vector
+myVec.normalized						
 -> "Vector{0.6000,0.8000}"
 
-myVec.normalized.length					-- chaining properties
+-- chaining properties
+myVec.normalized.length					
 -> 1.000000023841858
 
 myVec = Vector(3,4)		
 
-myVec.length2							-- get length squared
+-- get length squared
+myVec.length2							
 -> 25
 ```
 ##### Methods
-```lia
+```lua
 a = Vector(5,5)
 
-a:getLength()							-- equivalent to a.length
+-- equivalent to a.length
+a:getLength()							
 -> 7.0710678118654755
 
-a:getAngle()							-- equivalent to a.angle
+-- equivalent to a.angle
+a:getAngle()							
 -> 0.78539816339744828
 
-a:getNormalized()						-- equivalent to a.normalized
+-- equivalent to a.normalized
+a:getNormalized()						
 -> "Vector{0.7071,0.7071}"
 
-a:getLengthSquared()					-- equivalent to a.length2
+-- equivalent to a.length2
+a:getLengthSquared()					
 -> 50
 
-a:angled(0)								-- vector that would result from rotating 'a' to 0 degrees
+-- vector that would result from rotating 'a' to 0 degrees
+a:angled(0)								
 -> "Vector{7.0711,0.0000}"
 
-a:trim(1.4142165)						-- result if vector 'a' trimmed until it is length 1.4142165 or less
+-- result if vector 'a' trimmed until it is length 1.4142165 or less
+a:trim(1.4142165)						
 -> "Vector{1.0000,1.0000}"
 
-a:trim(100)								-- identical if a.length < 100
+-- identical if a.length < 100
+a:trim(100)								
 -> "Vector{5.0000,5.0000}"
 
-a:hadamard(Vector(2,3))					-- componentwise multiplication
+-- componentwise multiplication
+a:hadamard(Vector(2,3))					
 -> "Vector{10.0000,15.0000}"
 ```
 ##### Method Shortcuts
 ```lua
 myVec = Vector(3,4)
 
-myVec.angle = 0							-- equivalent to myVec = myVec:angled(0)
+-- equivalent to myVec = myVec:angled(0)
+myVec.angle = 0							
 print(myVec)
 -> "Vector{5.0000,0.0000}"
 
 myVec = Vector(0.6,0.8)
 	
-myVec.length = 5						-- equivalent to myVec = myVec.normalized * 5		
+-- equivalent to myVec = myVec.normalized * 5		
+myVec.length = 5						
 print(myVec)	
 -> "Vector{3.0000,4.0000}"
 ```
 ##### Comparing
 ```lua
 a = Vector(2,3)
+
+-- only returns true if right hand side is a vector with equal components
 
 a == 2
 -> false
@@ -148,16 +181,18 @@ a == "test string"
 a == {x = 2, y = 3}
 -> false
 
-a == Vector(2,3)						-- only returns true if right hand side is a vector with equal components
+a == Vector(2,3)						
 -> true
 
 a == Vector(3,2)
 -> false
 
-Vector.isVector(a)						-- check if vector
+-- check if vector
+Vector.isVector(a)						
 -> true
 
-Vector.isVector({x = 1, y = 2})			-- no silly type coercion
+-- no silly type coercion
+Vector.isVector({x = 1, y = 2})			
 -> false
 ```
 ##### Iterators
