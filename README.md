@@ -1,5 +1,4 @@
 # brinevector
-------
 A simple vector lua library for everyone!
 ### Motivation
 While looking for vector libraries for lua, I noticed most of them use tables to store the vectors themselves. This might be fine for most applications, but for games and high-performance uses, creating a table for every vector is simply too much overhead. Using C data to store and create vectors with the `ffi` library in luajit is a much more efficient method that can produce code that performs much faster and consumes a lot less memory. ([Depending on the application, around 35x less memory, and 20x better performance!](http://luajit.org/ext_ffi.html))
@@ -9,8 +8,7 @@ So I wrote this vector library to take advantage of that fact, and made it extre
 BrineVector was written for LOVE2D and is accelerated by the ffi module in luajit, but can be used for any luajit program.
 
 # installation
-------
-Paste the `brinevector.lua` file and its accompanying `LICENSE` into your project.
+Paste the `brinevector.lua` file and its accompanying `BRINEVECTOR_LICENSE` into your project.
 
 Simply `require` the file in your projects and give the returned table a name
 ```lua
@@ -22,9 +20,164 @@ local Vector = require "brinevector"
 ```
 You can replace `Vector` with any name you wish to use. Even `V`, for brevity. If you gave it any other name than `Vector`, in all code examples that follow, replace `Vector` with whatever name you gave it in the `require` call.
 # usage
----
-### Instantiating a vector
----
+Here is an overview of all the features, properties, and methods of this library, and for most people, is everything they need to use this library. Lines beginning with `->` are outputs of a lua interpreter.
+
+##### Basic
+```lua
+local Vector = require "brinevector"	-- assign a namespace
+
+local myVec = Vector(3,4)				-- declare a new vector
+
+print(myVector)							-- print and tostring
+-> "Vector{3.0000,4.0000}"
+
+myVec.x									-- access x component
+-> 3
+
+myVec.y									-- access y component
+-> 4
+
+myVec.x = -100							-- modifying a vector
+myVec.y = 25.5
+print(myVec)
+-> "Vector{-100.0000,25.5000}"
+```
+##### Arithmetic
+```lua
+local a = Vector(1,2)
+local b = Vector(3,4)
+
+a + b									-- addition
+-> "Vector{4.0000,6.0000}"
+
+a - b									-- subtraction
+-> "Vector{-2.0000,-2.0000}"
+
+a * 2									-- scalar multiplication
+-> "Vector{2.0000,4.0000}"
+
+a * b									-- dot multiplication
+-> 11
+
+a % b									-- componentwise multiplication
+-> "Vector{3.0000,8.0000}
+
+a / 2									-- scalar division
+-> "Vector{0.5000,1.0000}"				
+
+-a										-- unary negation
+-> "Vector{-1.0000,-2.0000}"
+```
+##### Properties
+```lua
+myVec = Vector(3,4)
+
+myVec.length							-- get length property
+-> 5
+
+myVec = Vector(6,8)						-- no need for methods like myVec:length()
+myVec.length
+-> 10
+
+myVec.angle								-- get angle in radians
+-> 0.92729521800161219
+
+myVec.normalized						-- get normalized vector
+-> "Vector{0.6000,0.8000}"
+
+myVec.normalized.length					-- chaining properties
+-> 1.000000023841858
+
+myVec = Vector(3,4)		
+
+myVec.length2							-- get length squared
+-> 25
+```
+##### Methods
+```lia
+a = Vector(5,5)
+
+a:getLength()							-- equivalent to a.length
+-> 7.0710678118654755
+
+a:getAngle()							-- equivalent to a.angle
+-> 0.78539816339744828
+
+a:getNormalized()						-- equivalent to a.normalized
+-> "Vector{0.7071,0.7071}"
+
+a:getLengthSquared()					-- equivalent to a.length2
+-> 50
+
+a:angled(0)								-- vector that would result from rotating 'a' to 0 degrees
+-> "Vector{7.0711,0.0000}"
+
+a:trim(1.4142165)						-- result if vector 'a' trimmed until it is length 1.4142165 or less
+-> "Vector{1.0000,1.0000}"
+
+a:trim(100)								-- identical if a.length < 100
+-> "Vector{5.0000,5.0000}"
+
+a:hadamard(Vector(2,3))					-- componentwise multiplication
+-> "Vector{10.0000,15.0000}"
+```
+##### Method Shortcuts
+```lua
+myVec = Vector(3,4)
+
+myVec.angle = 0							-- equivalent to myVec = myVec:angled(0)
+print(myVec)
+-> "Vector{5.0000,0.0000}"
+
+myVec = Vector(0.6,0.8)
+	
+myVec.length = 5						-- equivalent to myVec = myVec.normalized * 5		
+print(myVec)	
+-> "Vector{3.0000,4.0000}"
+```
+##### Comparing
+```lua
+a = Vector(2,3)
+
+a == 2
+-> false
+
+a == "test string"
+-> false
+
+a == {x = 2, y = 3}
+-> false
+
+a == Vector(2,3)						-- only returns true if right hand side is a vector with equal components
+-> true
+
+a == Vector(3,2)
+-> false
+
+Vector.isVector(a)						-- check if vector
+-> true
+
+Vector.isVector({x = 1, y = 2})			-- no silly type coercion
+-> false
+```
+##### Iterators
+```lua
+local pos = Vector(3,4)
+for i,axis in Vector.axes("xy") do
+	print(i, axis, pos[axis])
+end
+-> 1 x 3
+-> 2 y 4
+
+for i,axis in Vector.axes("yx") do
+	print(i, axis, pos[axis])
+end
+-> 1 y 4
+-> 2 x 3
+```
+
+For beginners, or for anyone who wants more details, read the sections down below.
+## Instantiating a vector
 To create a new vector, just call the module directly
 ```lua
 local myVec = Vector(3,4)
@@ -41,9 +194,8 @@ is equivalent to
 ```lua
 local zVec = Vector(0,0)
 ```
-### Accessing a vector's components
----
-##### Getting
+## Accessing a vector's components
+### Getting
 Getting the x and y components of a vector works as you expect. 
 
 If you have
@@ -56,15 +208,14 @@ then `myVec.x` and `myVec.y` will return the x and y components of `myVec`, resp
 print ( myVec.x )   -- prints "3"
 print ( myVec.y )   -- prints "4"
 ```
-##### Setting
+### Setting
 Assigning and modifying the x and y components is also straightforward
 ```lua
 myVec.x = 10
 myVec.y = 20
 ```
 will set the x component of `myVec` to `10` and the y component to `20`
-### Printing a vector
----
+## Printing a vector
 When using `tostring` or `print` on a vector, it will display in a readable format with 4 decimal places for each component. Thus,
 ```lua
 local myVec = Vector(3,4)
@@ -77,9 +228,8 @@ local myStr = "the vector is " .. tostring(myOtherVec)
 print(myStr)
 ```
 Outputs `"the vector is Vector{1.1235,-3.1416}"`.
-### Vector Arithmetic
----
-##### Addition and Subtraction
+## Vector Arithmetic
+### Addition and Subtraction
 You can add and subtract vectors using `+` and `-`
 If you have
 ```lua
@@ -94,7 +244,7 @@ b - a       -- returns a vector <-2,-2>
 a = a + b   -- a then becomes <4,6>
 ```
 
-##### Multiplication with a scalar
+### Multiplication with a scalar
 There are a few different types of vector multiplication. The simplest is multiplication of a vector with a number. 
 ```lua
 local a = Vector(3,4)
@@ -103,14 +253,14 @@ a * -1          -- returns <-3,-4>
 3.1415 * a      -- returns <9.4245,12.5660>
 local c = a * 2 -- instantiates a new vector with values <6,8>
 ```
-##### Multiplication with another vector
+### Multiplication with another vector
 Multiplying two vectors together with the operator `*` performs the [dot product](https://en.wikipedia.org/wiki/Dot_product), which returns a single number.
 ```lua
 local a = Vector(1,2)
 local b = Vector(3,4)
 a * b   -- results with (a.x * b.x) + (a.y * b.y), which is 11
 ```
-##### Hadamard product
+### Hadamard product
 In some cases, you might want to get a vector whose x component is the product of two other vectors' x components, and whose y component is the product of their y components. (ie. "Component-wise" or "Freshman" multiplication)
 ```lua
 local a = Vector(3,4)
@@ -125,13 +275,13 @@ If that makes you uncomfortable because % to you can only mean modulo, then alte
 ```lua
 local c = a:hadamard(b) -- c becomes <3,-4>
 ```
-##### Division with a scalar
+### Division with a scalar
 Dividing a vector `V` with a scalar `x`, is exactly equivalent to multiplying `V` with `1/x`. Thus,
 ```lua
 local a = Vector(3,4)
 a / 5   -- returns <0.6,0.8>
 ```
-##### Division with a vector?
+### Division with a vector?
 In mathematics, there is no rule for dividing a vector with another vector, and so trying
 ```lua
 local a = Vector(1,1)
@@ -140,15 +290,14 @@ a / b
 ```
 produces an error: `must divide by a scalar`
 
-##### Negation
+### Negation
 A vector preceded by the unary minus operation (like `-v`, where `v` is a vector) is exactly equivalent to `v * -1`
 ```lua
 local a = Vector(3,4)
 -a      -- returns <-3,-4>
 -a * 5  -- returns <-15,-20>
 ```
-### Vector properties
----
+## Vector properties
 For maximum convenience and ease of use, the most common properties of a vector are accessed just like any members of a table, **_without having to call any methods_** like in other libraries.
 
 These are:
@@ -156,7 +305,7 @@ These are:
 -   `angle`
 -   `normalized`
 -   `length2`
-##### length
+### length
 You can access the length of a vector with `.length`. 
 Thus if you have
 ```lua
@@ -176,20 +325,20 @@ local b = myVec.length        -- b becomes '15'
 ```
 Notice how you don't need to use a method like `a:length()` or `a:getLength()`. 
 You simply use `a.length`
-##### angle
+### angle
 Using `.angle` gives the angle of a vector in radians
 ```lua
 local myVec = Vector(1,1)
 myVec.angle     -- produces PI/4 radians, or 0.78539816339744828
 ```
-##### normalized
+### normalized
 Using `.normalized` gives the normalized vector of a given vector. That is, a vector with the same angle as the original, but whose length is `1`.
 ```lua
 local myVec = Vector(3,4)
 local myVecN = myVec.normalized    -- myVecN becomes <0.6,0.8>
 myVecN.length                      -- is '1'
 ```
-##### length2
+### length2
 For most purposes (like comparing the lengths of vectors) you only need to compare the squares of the lengths of the vectors. This is because to get the length, any library needs to call `math.sqrt`. This can be slow, and so if you're conscious about performance, you can use `.length2`, which returns the length of a vector squared
 ```lua
 -- compare the lengths of two vectors
@@ -203,16 +352,15 @@ elseif bakery.length2 > restaurant.length2 then
 end
 -- outputs "The bakery is closer"
 ```
-### Vector methods
----
-##### Property methods
+## Vector methods
+### Property methods
 If you prefer getting the above properties with methods instead like in other libraries, you can always still use the following:
 -   `myVec:getLength()`   -- equivalent to `myVec.length`
 -   `myVec:getAngle()`    -- equivalent to `myVec.angle`
 -   `myVec:getNormalized()` -- equivalent to `myVec.normalized`
 -   `myVec:getLengthSquared()`  -- equivalent to `myVec.length2`
 
-##### angled
+### angled
 ###### `myVec:angled( angle )`
 This returns a vector whose length is the same as `myVec` but whose angle is set to `angle` (in radians). For example,
 ```lua
@@ -226,7 +374,7 @@ This is equivalent to
 local a = Vector(3,4)
 local b = Vector(a.length*math.cos(0), a.length*math.cos(0))
 ```
-##### trim
+### trim
 ###### `myVec:trim( length )`
 This returns a vector with the same angle as `myVec`, but whose length is "trimmed" down to `length` only if it is longer than `length`. 
 
@@ -253,7 +401,7 @@ if vel.length > MAXSPEED then
     vel = vel.normalized * MAXSPEED
 end
 ```
-##### hadamard
+### hadamard
 ###### `myVec:hadamard( otherVec )`
 This returns a vector that is the result of a component-wise multiplication between `myVec` and `otherVec`. Thus `a = b:hadamard(c)` is equivalent to
 ```lua
@@ -261,7 +409,7 @@ a = Vector( b.x * c.x, b.y * c.y )
 ```
 Alternatively, you can use `a = b % c`.
 
-##### split
+### split
 ###### `myVec:split( )`
 This returns two values: the x component of the vector, and the y component of the vector.
 Thus,
@@ -272,20 +420,51 @@ is equivalent to
 ```lua
 local x, y = myVec.x, myVec.y
 ```
-### Comparing vectors with `==`
+## Method Shortcuts
+Vectors can also be directly modified through their `length` and `angle` properties. This makes for some very short code.
+
+If you have
+```lua
+myVec = Vector(3,4)
+```
+, and you want to modify it such that it keeps its direction but its length changes to `20`, then you can simply do
+```lua
+myVec.length = 20
+```
+And now if you inspect `myVec`,
+```lua
+"Vector{12.0000,16.0000}"
+```
+This is equivalent to 
+```lua
+myVec = myVec.normalized * 20
+```
 ---
-Vectors can be compared with any other data with `==`. 
+Similarly, if you have a vector
+```lua
+myUnitVec = Vector(1,0)
+```
+And you want it to point to an angle called `someangle`, but still have a length of 1, then simply do
+```lua
+myUnitVec.angle = someangle
+```
+This is equivalent to
+```lua
+myUnitVec = myUnitVec:angled(someangle)
+```
+
+## Comparing vectors with `==`
+Vectors can be compared with any other data using `==`. 
+
 `myVec == something` will only return `true` if 
 -   `something` is another vector and
 -   `something.x` == `myVec.x` and
 -   `something.y` == `myVec.y`
 
 Otherwise, it will return `false`
-### Checking if a variable is a vector
----
+## Checking if a variable is a vector
 Use __`Vector.isVector(x)`__ to check if `x` is a vector instantiated from the table returned by `require "brinevector"`.
-### Iterating through the axes of vectors
----
+## Iterating through the axes of vectors
 A handy way to iterate over the x and y axes of vectors is through the following construct:
 ```lua
 for _,axis in Vector.axes("xy") do
@@ -336,12 +515,11 @@ end
 ```
 Which avoids rewriting the inner loop for each axis.
 # license
----
 
-Copyright 2018 'novemberisms' aka. Brian Sarfati
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+>Copyright 2018 'novemberisms' aka. Brian Sarfati
+>
+>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
