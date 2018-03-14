@@ -30,16 +30,18 @@ typedef struct {
 local Vector = {}
 setmetatable(Vector,Vector)
 
+local special_properties = {
+  length = "getLength",
+  normalized = "getNormalized",
+  angle = "getAngle",
+  length2 = "getLengthSquared",
+  copy = "getCopy",
+  inverse = "getInverse"
+}
 
 function Vector.__index(t, k)
-  if k == "length" then 
-    return Vector.getLength(t) 
-  elseif k == "normalized" then
-    return Vector.getNormalized(t)
-  elseif k == "angle" then
-    return Vector.getAngle(t)
-  elseif k == "length2" then
-    return Vector.getLengthSquared(t)
+  if special_properties[k] then
+    return Vector[special_properties[k]](t)
   end
   return rawget(Vector,k)
 end
@@ -60,6 +62,14 @@ end
 
 function Vector.getAngle(v)
   return math.atan2(v.y, v.x)
+end
+
+function Vector.getCopy(v)
+  return Vector(v.x,v.y)
+end
+
+function Vector.getInverse(v)
+  return Vector(1 / v.x, 1 / v.y)
 end
 
 function Vector.__newindex(t,k,v)
@@ -114,6 +124,21 @@ function Vector.axes(order)
   return iteraxes, iteraxes_lookup[order or "yx"], 0
 end
 
+local function iterpairs(vector, k)
+  if k == nil then
+    k = "x"
+  elseif k == "x" then
+    k = "y"
+  else
+    k = nil
+  end
+  return k, vector[k]
+end
+
+function Vector.__pairs(v)
+  return iterpairs, v, nil
+end
+
 function Vector.isVector(arg)
   return ffi.istype("brinevector",arg)
 end
@@ -164,6 +189,21 @@ end
 function Vector.__call(t,x,y)
   return ffi.new("brinevector",x or 0,y or 0)
 end
+
+local dirs = {
+  up = Vector(0,-1),
+  down = Vector(0,1),
+  left = Vector(-1,0),
+  right = Vector(1,0),
+  top = Vector(0,-1),
+  bottom = Vector(0,1)
+}
+
+function Vector.dir(dir)
+  return dirs[dir].copy
+end
+
+
 
 ffi.metatype("brinevector",Vector)
 
