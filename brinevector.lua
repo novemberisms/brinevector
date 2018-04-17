@@ -186,6 +186,10 @@ function Vector.__tostring(t)
   return string.format("Vector{%.4f,%.4f}",t.x,t.y)
 end
 
+function Vector.__concat(v1, v2)
+  return v1 .. tostring(v2)
+end
+
 function Vector.__call(t,x,y)
   return ffi.new("brinevector",x or 0,y or 0)
 end
