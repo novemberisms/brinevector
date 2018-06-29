@@ -55,7 +55,11 @@ a % b
 
 -- scalar division
 a / 2									
--> "Vector{0.5000,1.0000}"				
+-> "Vector{0.5000,1.0000}"	
+
+-- componentwise division
+a / b
+-> "Vector{0.3333,0.5000}"
 
 -- unary negation
 -a										
@@ -81,6 +85,14 @@ myVec.angle
 -- get normalized vector
 myVec.normalized						
 -> "Vector{0.6000,0.8000}"
+
+-- get componentwise inverse
+myVec.inverse
+-> "Vector{0.1667,0.1250}"
+
+-- make copy of vector
+myVec.copy
+-> "Vector{6.0000,8.0000}"
 
 -- chaining properties
 myVec.normalized.length					
@@ -112,9 +124,21 @@ a:getNormalized()
 a:getLengthSquared()					
 -> 50
 
+-- equivalent to a.inverse
+a:getInverse()
+-> "Vector{0.2000,0.2000}
+
+-- equivalent to a.copy
+a:getCopy()
+-> "Vector{5.0000,5.0000}
+
 -- vector that would result from rotating 'a' to 0 degrees
 a:angled(0)								
 -> "Vector{7.0711,0.0000}"
+
+-- vector that would result from further rotating 'a' by 180 degrees
+a:rotated(math.pi)
+-> "Vector{-5.0000,-5.0000}"
 
 -- result if vector 'a' trimmed until it is length 1.4142165 or less
 a:trim(1.4142165)						
@@ -169,6 +193,27 @@ Vector.isVector(a)
 Vector.isVector({x = 1, y = 2})			
 -> false
 ```
+##### String Directions
+```lua
+Vector.dir("up")
+-> "Vector{0.0000,-1.0000}"
+
+Vector.dir("top")
+-> "Vector{0.0000,-1.0000}"
+
+Vector.dir("down")
+-> "Vector{0.0000,1.0000}"
+
+Vector.dir("bottom")
+-> "Vector{0.0000,1.0000}"
+
+Vector.dir("left")
+-> "Vector{-1.0000,0.0000}"
+
+Vector.dir("right")
+-> "Vector{1.0000,0.0000}"
+```
+
 ##### Iterators
 ```lua
 local pos = Vector(3,4)
