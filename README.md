@@ -8,6 +8,9 @@ So I wrote this vector library to take advantage of that fact, and made it extre
 ### Compatibility
 BrineVector was written for LOVE2D and is accelerated by the ffi module in luajit, but can be used for any luajit program.
 
+**WARNING FOR MOBILE APPLICATIONS**
+This library takes advantage of the JIT compiler on desktop targets for LOVE2D. This gives a great performance boost to desktop, but for mobile platforms, the JIT is not enabled by default, and as such it is not recommended to use for mobile applications.
+
 # installation
 Paste the `brinevector.lua` file and its accompanying `BRINEVECTOR_LICENSE` into your project.
 
