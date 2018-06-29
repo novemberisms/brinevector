@@ -1,3 +1,4 @@
+-- LAST UPDATED: 6/29/18
 --[[
 BrineVector: a luajit ffi-accelerated vector library
 
@@ -110,6 +111,12 @@ function Vector.hadamard(v1, v2) -- also known as "Componentwise multiplication"
   return Vector(v1.x * v2.x, v1.y * v2.y)
 end
 
+function Vector.rotated(v, angle)
+  local length = v.length
+  local new_angle = v.angle + angle
+  return Vector(math.cos(new_angle) * length, math.sin(new_angle) * length)
+end
+
 local iteraxes_lookup = {
   xy = {"x","y"},
   yx = {"y","x"}
@@ -165,8 +172,12 @@ function Vector.__mul(v1, op)
 end
 
 function Vector.__div(v1, op)
-  if type(op) ~= "number" then error("must divide by a scalar") end
-  return Vector(v1.x / op, v1.y / op)
+  if type(op) == "number" then
+    return Vector(v1.x / op, v1.y / op)
+  elseif type(op) == "cdata" then
+    if op.x * op.y == 0 then error("Vector NaN occured") end
+    return Vector(v1.x / op.x, v1.y / op.y)
+  end
 end
 
 function Vector.__unm(v)
@@ -183,7 +194,11 @@ function Vector.__mod(v1,v2)  -- ran out of symbols, so i chose % for the hadama
 end
 
 function Vector.__tostring(t)
-  return string.format("Vector{%.4f,%.4f}",t.x,t.y)
+  return string.format("Vector{%.4f, %.4f}",t.x,t.y)
+end
+
+function Vector.__concat(str, v)
+  return tostring(str) .. tostring(v)
 end
 
 function Vector.__call(t,x,y)
@@ -200,7 +215,7 @@ local dirs = {
 }
 
 function Vector.dir(dir)
-  return dirs[dir].copy
+  return dirs[dir] and dirs[dir].copy or Vector()
 end
 
 
