@@ -201,6 +201,10 @@ function Vector.__concat(str, v)
   return tostring(str) .. tostring(v)
 end
 
+function Vector.__concat(v1, v2)
+  return v1 .. tostring(v2)
+end
+
 function Vector.__call(t,x,y)
   return ffi.new("brinevector",x or 0,y or 0)
 end
