@@ -218,8 +218,9 @@ These are:
 -   `inverse`
 -   `copy`
 ### length
-You can access the length of a vector with `.length`. 
+You can access the length of a vector with `.length` or by using the lua `#` operator. 
 Thus if you have
+
 ```lua
 local myVec = Vector(3,4)
 ```
@@ -228,7 +229,15 @@ then
 myVec.length
 ```
 produces `5`. 
+
+```lua
+#myVec
+```
+
+will also produce `5`
+
 Even if you edit the vector later on, accessing the `length` property automatically computes the new length. This makes code shorter and more understandable. This is true for all the other special properties. They are generated on the fly when you ask for them.
+
 ```lua
 local myVec = Vector(3,4)
 local a = myVec.length        -- a becomes '5'
