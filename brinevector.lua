@@ -1,4 +1,10 @@
--- LAST UPDATED: 6/29/18
+-- LAST UPDATED: 9/25/18
+-- added Vector.getCeil and v.ceil
+-- added Vector.clamp
+-- changed float to double as per Mike Pall's advice
+-- added Vector.floor
+-- added fallback to table if luajit ffi is not detected (used for unit tests)
+
 --[[
 BrineVector: a luajit ffi-accelerated vector library
 
@@ -20,13 +26,20 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --]]
 
-local ffi = require "ffi"
-ffi.cdef[[
-typedef struct {
-  float x;
-  float y;
-} brinevector;
-]]
+local ffi
+local VECTORTYPE = "cdata"
+
+if jit and jit.status() then
+  ffi = require "ffi"
+  ffi.cdef[[
+  typedef struct {
+    double x;
+    double y;
+  } brinevector;
+  ]]
+else
+  VECTORTYPE = "table"
+end
 
 local Vector = {}
 setmetatable(Vector,Vector)
@@ -37,7 +50,9 @@ local special_properties = {
   angle = "getAngle",
   length2 = "getLengthSquared",
   copy = "getCopy",
-  inverse = "getInverse"
+  inverse = "getInverse",
+  floor = "getFloor",
+  ceil = "getCeil",
 }
 
 function Vector.__index(t, k)
@@ -73,6 +88,14 @@ function Vector.getInverse(v)
   return Vector(1 / v.x, 1 / v.y)
 end
 
+function Vector.getFloor(v)
+  return Vector(math.floor(v.x), math.floor(v.y))
+end
+
+function Vector.getCeil(v)
+  return Vector(math.ceil(v.x), math.ceil(v.y))
+end
+
 function Vector.__newindex(t,k,v)
   if k == "length" then
     local res = t.normalized * v
@@ -86,10 +109,10 @@ function Vector.__newindex(t,k,v)
     t.y = res.y
     return
   end
-  if type(t) == "cdata" then
-    error("Cannot assign a new property '" .. k .. "' to a Vector") 
-  else
+  if t == Vector then
     rawset(t,k,v)
+  else
+    error("Cannot assign a new property '" .. k .. "' to a Vector", 2) 
   end
 end
 
@@ -105,6 +128,19 @@ end
 
 function Vector.split(v)
   return v.x, v.y
+end
+
+local function clamp(x, min, max)
+  -- because Mike Pall says math.min and math.max are JIT-optimized
+  return math.min(math.max(min, x), max)
+end
+
+function Vector.clamp(v, topleft, bottomright)
+  -- clamps a vector to a certain bounding box about the origin
+  return Vector(
+    clamp(v.x, topleft.x, bottomright.x), 
+    clamp(v.y, topleft.y, bottomright.y)
+  )
 end
 
 function Vector.hadamard(v1, v2) -- also known as "Componentwise multiplication"
@@ -146,8 +182,14 @@ function Vector.__pairs(v)
   return iterpairs, v, nil
 end
 
-function Vector.isVector(arg)
-  return ffi.istype("brinevector",arg)
+if ffi then
+  function Vector.isVector(arg)
+    return ffi.istype("brinevector",arg)
+  end
+else
+  function Vector.isVector(arg)
+    return type(arg) == VECTORTYPE and arg.x and arg.y
+  end
 end
 
 function Vector.__add(v1, v2)
@@ -164,7 +206,7 @@ function Vector.__mul(v1, op)
   if type(v1) == "number" then
     return Vector(op.x * v1, op.y * v1)
   end
-  if type(op) == "cdata" then
+  if type(op) == VECTORTYPE then
     return v1.x * op.x + v1.y * op.y
   else
     return Vector(v1.x * op, v1.y * op)
@@ -173,9 +215,10 @@ end
 
 function Vector.__div(v1, op)
   if type(op) == "number" then
+    if op == 0 then error("Vector NaN occured", 2) end
     return Vector(v1.x / op, v1.y / op)
-  elseif type(op) == "cdata" then
-    if op.x * op.y == 0 then error("Vector NaN occured") end
+  elseif type(op) == VECTORTYPE then
+    if op.x * op.y == 0 then error("Vector NaN occured", 2) end
     return Vector(v1.x / op.x, v1.y / op.y)
   end
 end
@@ -185,7 +228,7 @@ function Vector.__unm(v)
 end
 
 function Vector.__eq(v1,v2)
-  if (not ffi.istype("brinevector",v2)) or (not ffi.istype("brinevector",v1)) then return false end
+  if (not Vector.isVector(v1)) or (not Vector.isVector(v2)) then return false end
   return v1.x == v2.x and v1.y == v2.y
 end
 
@@ -201,8 +244,18 @@ function Vector.__concat(str, v)
   return tostring(str) .. tostring(v)
 end
 
-function Vector.__call(t,x,y)
-  return ffi.new("brinevector",x or 0,y or 0)
+function Vector.__len(v)
+  return math.sqrt(v.x * v.x + v.y * v.y)
+end
+
+if ffi then
+  function Vector.__call(t,x,y)
+    return ffi.new("brinevector",x or 0,y or 0)
+  end
+else
+  function Vector.__call(t,x,y)
+    return setmetatable({x = x or 0, y = y or 0}, Vector)
+  end
 end
 
 local dirs = {
@@ -219,7 +272,8 @@ function Vector.dir(dir)
 end
 
 
-
-ffi.metatype("brinevector",Vector)
+if ffi then
+  ffi.metatype("brinevector",Vector)
+end
 
 return Vector

@@ -5,12 +5,19 @@ A simple vector lua library for everyone!
 While looking for vector libraries for lua, I noticed most of them use tables to store the vectors themselves. This might be fine for most applications, but for games and high-performance uses, creating a table for every vector is simply too much overhead. Using C data to store and create vectors with the `ffi` library in luajit is a much more efficient method that can produce code that performs much faster and consumes a lot less memory. ([Depending on the application, around 35x less memory, and 20x better performance!](http://luajit.org/ext_ffi.html))
 
 So I wrote this vector library to take advantage of that fact, and made it extremely beginner-friendly and easy for everybody to use. It's also designed to be lightweight and very portable; it's only really a single file!
+
+And if the library detects that you're on a platform that does not fully support the `ffi` library, then it will automatically fall back to using your standard lua tables, meaning there are no downsides to sticking with brinevector when developing for mobile compared to other vector libraries.
+
 ### Compatibility
 BrineVector was written for LOVE2D and is accelerated by the ffi module in luajit, but can be used for any luajit program.
 
-##### WARNING FOR MOBILE APPLICATIONS
+##### Fallback to standard lua tables
 
-This library takes advantage of the JIT compiler on desktop targets for LOVE2D. This gives a great performance boost to desktop, but for mobile platforms, the JIT is not enabled by default, and as such it is not recommended to use for mobile applications.
+This library takes advantage of the JIT compiler on desktop targets for LOVE2D. This gives a great performance boost to desktop applications, but for mobile and console platforms, the JIT is disabled because they do not allow execution of arbitrary runtime code.
+
+The `ffi` library still works, but it takes much longer to call functions and marshal values between lua and C. Even longer than if brinevector used tables instead. This means that a mobile or console app would be better off falling back to a table implementation of vectors rather than using the `ffi` library.
+
+Fortunately, brinevector is aware of this limitation, and will **automatically fall back to tables** if it detects that it's running on **mobile** or **consoles**. This gives you the same amount of performance as any other table-based vector library on mobile and consoles, but also gives you a tremendous boost to desktop games, all without having to do anything on your end.
 
 # installation
 Paste the `brinevector.lua` file and its accompanying `BRINEVECTOR_LICENSE` into your project.
@@ -32,42 +39,44 @@ For beginners, or for anyone who wants more details, read the sections down belo
 ## Contents
 -	[Instantiating a vector](#instantiating-a-vector)
 -	[Accessing a vector's components](#accessing-a-vectors-components)
-	-	[Getting](#getting)
-	-	[Setting](#setting)
+  -	[Getting](#getting)
+  -	[Setting](#setting)
 -	[Printing a Vector](#printing-a-vector)
 -	[Vector Arithmetic](#vector-arithmetic)
-	-	[Addition and Subtraction](#addition-and-Subtraction)
-	-	[Multiplication with a scalar](#multiplication-with-a-scalar)
-	-	[Multiplication with another vector](#multiplication-with-another-vector)
-	-	[Hadamard Product](#hadamard-product)
-	-	[Division with a scalar](#division-with-a-scalar)
-	-	[Division with a vector?](#division-with-a-vector)
-	-	[Negation](#negation)
+  -	[Addition and Subtraction](#addition-and-Subtraction)
+  -	[Multiplication with a scalar](#multiplication-with-a-scalar)
+  -	[Multiplication with another vector](#multiplication-with-another-vector)
+  -	[Hadamard Product](#hadamard-product)
+  -	[Division with a scalar](#division-with-a-scalar)
+  -	[Division with a vector](#division-with-a-vector)
+  -	[Negation](#negation)
 -	[Vector Properties](#vector-properties)
-	-	[`length`](#length)
-	-	[`angle`](#angle)
-	-	[`normalized`](#normalized)
-	-	[`length2`](#length2)
-	-	[`inverse`](#inverse)
-	-	[`copy`](#copy)
+  -	[`length`](#length)
+  -	[`angle`](#angle)
+  -	[`normalized`](#normalized)
+  -	[`length2`](#length2)
+  -	[`inverse`](#inverse)
+  -	[`copy`](#copy)
+  -	[`floor`](#floor)
+  -	[`ceil`](#ceil)
 -	[Vector Methods](#vector-methods)
-	-	[`getLength()`](#property-methods)
-	-	[`getAngle()`](#property-methods)
-	-	[`getNormalized()`](#property-methods)
-	-	[`getLengthSquared()`](#property-methods)
-	-	[`getInverse()`](#property-methods)
-	-	[`getCopy()`](#property-methods)
-	-	[`angled(theta)`](#angled)
-	-	[`rotated(theta)`](#rotated)
-	-	[`trim(length)`](#trim)
+  -	[`getLength()`](#property-methods)
+  -	[`getAngle()`](#property-methods)
+  -	[`getNormalized()`](#property-methods)
+  -	[`getLengthSquared()`](#property-methods)
+  -	[`getInverse()`](#property-methods)
+  -	[`getCopy()`](#property-methods)
+  -	[`getFloor()`](#property-methods)
+  -	[`getCeil()`](#property-methods)
+  -	[`angled(theta)`](#angled)
+  -	[`rotated(theta)`](#rotated)
+  -	[`trim(length)`](#trim)
 	-	[`hadamard(vector)`](#hadamard)
 	-	[`split()`](#split)
+	-	[`clamp(min, max)`](#clamp)
 -	[Method Shortcuts](#method-shortcuts)
--	[Comparing Vectors with `==`](#comparing-vectors-with-)
--	[Passing Vectors by copy](#passing-vectors-by-copy)
+-	[Comparing Vectors with](#comparing-vectors-with-)`==`
 -	[Checking if a variable is a Vector](#checking-if-a-variable-is-a-vector)
--	[Converting a directional string to a unit vector](#converting-a-directional-string-to-a-unit-vector)
--	[Iterating through the axes of Vectors](#iterating-through-the-axes-of-vectors)
 ## Instantiating a vector
 To create a new vector, just call the module directly
 ```lua
@@ -95,6 +104,7 @@ local myVec = Vector(3,4)
 ```
 then `myVec.x` and `myVec.y` will return the x and y components of `myVec`, respectively. 
 (`3` and `4`)
+
 ```lua
 print ( myVec.x )   -- prints "3"
 print ( myVec.y )   -- prints "4"
@@ -179,18 +189,14 @@ Dividing a vector `V` with a scalar `x`, is exactly equivalent to multiplying `V
 local a = Vector(3,4)
 a / 5   -- returns <0.6,0.8>
 ```
-### Division with a vector?
-In mathematics, there is no rule for dividing a vector with another vector, and so trying
+### Division with a vector
+In mathematics, there is no rule for dividing a vector with another vector, but because this library is mainly used in games, a division between vectors `vecA` and `vecB` produces a new vector whose components are the component-wise division of `vecA` and `vecB`
 ```lua
 local a = Vector(1,1)
 local b = Vector(5,5)
-a / b
+a / b -- equivalent to Vector(a.x / b.x, a.y / b.y)
 ```
-produces an error: `must divide by a scalar`
-
-**UPDATE**
-
-In newer versions of this library, for convenience's sake, I've changed this behavior, and division between two vectors `vecA / vecB` now acts as a componentwise division. The result will be `Vector( vecA.x / vecB.x , vecA.y / vecB.y )`
+##### NaN handling
 
 If either of the divisor's components are `0` then vector division will produce a `NaN`, which this library treats as an error, because in LOVE2D, many bugs are caused by hidden `NaN`s allowed to propagate.
 
@@ -272,6 +278,25 @@ Produces a copy of the vector with the same x and y values, but with a different
 
 Lua by default passes cdata like these vectors by reference, which can cause many kinds of bugs. To avoid these, when assigning vectors, try using `vecA = vecB.copy`. 
 
+### floor
+
+Gives the vector that would be formed by taking the `math.floor`results of the `x` and `y` components of a vector
+
+```lua
+local myVec = Vector(1.123, 5.234)
+print( myVec.floor )
+-> Vector{1.0000, 5.0000}
+```
+
+### ceil
+
+Gives the vector that would be formed by taking the `math.ceil`results of the `x` and `y` components of a vector
+
+```lua
+local myVec = Vector(1.123, 5.234)
+print( myVec.ceil )
+-> Vector{2.0000, 6.0000}
+```
 
 ## Vector methods
 ### Property methods
@@ -280,8 +305,10 @@ If you prefer getting the above properties with methods instead like in other li
 -   `myVec:getAngle()`    -- equivalent to `myVec.angle`
 -   `myVec:getNormalized()` -- equivalent to `myVec.normalized`
 -   `myVec:getLengthSquared()`  -- equivalent to `myVec.length2`
--	`myVec:getInverse()`	-- equivalent to `myVec.inverse`
--	`myVec:getCopy()`	-- equivalent to `myVec.copy`
+-   `myVec:getInverse()`	-- equivalent to `myVec.inverse`
+-   `myVec:getCopy()`	-- equivalent to `myVec.copy`
+-   `myVec:getFloor()`   -- equivalent to `myVec.floor`
+-   `myVec:getCeil()`   -- equivalent to `myVec.ceil`
 
 ### angled
 ###### `myVec:angled( angle )`
@@ -353,6 +380,7 @@ Alternatively, you can use `a = b % c`.
 ###### `myVec:split( )`
 This returns two values: the x component of the vector, and the y component of the vector.
 Thus,
+
 ```lua
 local x, y = myVec:split()
 ```
@@ -360,7 +388,41 @@ is equivalent to
 ```lua
 local x, y = myVec.x, myVec.y
 ```
+### clamp
+###### `myVec:clamp(min, max)`
+
+This clamps the vector `myVec` per component between `min` and `max`
+
+That is, 
+
+```lua
+myVec:clamp(vecA, vecB)
+```
+
+ is equivalent to
+
+```lua
+myVec = Vector(
+    clamp(myVec, vecA.x, vecB.x),
+    clamp(myVec, vecA.y, vecB.y)
+)
+```
+
+where `clamp` is defined as follows:
+
+```lua
+-- if value is less than min, returns min
+-- if value is greater than max, returns max
+-- else, returns value
+local function clamp(value, min, max)
+    return math.min(math.max(min, value), max)
+end
+```
+
+Think of it like you're clamping a vector to be within a rectangle whose top left edge is at `vecA` and whose bottom right edge is at `vecB`. This is very common when implementing cameras with set limits as to how far it can go.
+
 ## Method Shortcuts
+
 Vectors can also be directly modified through their `length` and `angle` properties. This makes for some very short code.
 
 If you have
@@ -402,129 +464,11 @@ Vectors can be compared with any other data using `==`.
 -   `something.y` == `myVec.y`
 
 Otherwise, it will return `false`
-## Passing Vectors by copy
-By default, lua passes these vectors (and other kinds of cdata structs) by reference. This can cause all sorts of weird bugs if you're not aware. 
-
-For instance, if you want to spawn a bullet in the same position as a player and then later on change the position of the bullet, you'll also change the position of the player! Here's a demonstration
-```lua
--- here's the player
-local player = {
-  position = Vector(0, 0)
-}
-
--- now let's make a bullet fire from the player
-local bullet = {
-  position = player.position
-}
- 
--- now let's move the bullet
-bullet.position.x = 100
-bullet.position.y = 300
-
--- seems fine
-print(bullet.position)
-> "Vector{100.0000,300.0000}
-
--- but why did the player move too???
-print(player.position)
-> "Vector{100.0000,300.0000}
-```
-
-This is clearly because the vector is being passed by reference when you do `bullet.position = player.position`
-
-To fix this, use `.copy` to make an exact copy of the position vector, and when you change the bullet's position, then the player's position will remain unchanged.
-```lua
--- here's the player
-local player = {
-  position = Vector(0, 0)
-}
-
--- now let's make a bullet fire from the player
-local bullet = {
-  position = player.position.copy -- NOTE: using a copy
-}
- 
--- now let's move the bullet
-bullet.position.x = 100
-bullet.position.y = 300
-
--- seems fine
-print(bullet.position)
-> "Vector{100.0000,300.0000}
-
--- no more bugs!
-print(player.position)
-> "Vector{0.0000,0.0000}
-```
-
 ## Checking if a variable is a vector
 Use __`Vector.isVector(x)`__ to check if `x` is a vector instantiated from the table returned by `require "brinevector"`.
-## Converting a directional string to a unit vector
-A common use case in lua games is having directions stored as strings. If you then want to convert these commonly used strings to vectors with length 1, then use the handy `Vector.dir()` method.
-
-Here are all the supported directions
-```lua
-Vector.dir("up")    -- returns Vector(0, -1)
-Vector.dir("down")  -- returns Vector(0, 1)
-Vector.dir("left")  -- returns Vector(-1, 0)
-Vector.dir("right") -- returns Vector(1, 0)
-Vector.dir("top")   -- same as Vector.dir("up")
-Vector.dir("bottom")-- same as Vector.dir("down")
-```
-
-## Iterating through the axes of vectors
-A handy way to iterate over the x and y axes of vectors is through the following construct:
-```lua
-for _,axis in Vector.axes("xy") do
-    -- do something
-end
-```
-`axis` will be the string `"x"` in the first iteration, and then `"y"` in the second iteration.
-
-You can also use `Vector.axes("yx")` to iterate the `"y"` axis first and then the `"x"` axis next. 
-
-__How can I use this?__
-
-A common update method in 2d platformers involves updating the y axis first and then checking and adjusting for collisions, and then updating the x axis and the checking and adjusting for collisions. Like this:
-
-Suppose you have an entity with a vector called `pos` and a vector called `vel`, who upon colliding with a `block` object, calls its `onCollide` method to set the entity's position correctly upon a collision so they don't pass through.
-
-This is how it's commonly done.
-```lua
-function entity:update(dt)
-    self.vel = self.vel + self.acc * dt
-    self.pos.y = self.pos.y + self.vel.y * dt
-    for _,v in ipairs(blocks) do
-        if checkCollision(self,v) then
-            v:onCollide(self)
-        end
-    end
-    self.pos.x = self.pos.x + self.vel.x * dt
-    for _,v in ipairs(blocks) do
-        if checkCollision(self,v) then
-            v:onCollide(self)
-        end
-    end
-end
-```
-But with `Vector.axes()`, you can rewrite it as
-```lua
-function entity:update(dt)
-    self.vel = self.vel + self.acc * dt
-    for _,axis in Vector.axes("yx") do
-        self.pos[axis] = self.pos[axis] + self.vel[axis] * dt
-        for _,v in ipairs(blocks) do
-            if checkCollision(self,v) then
-                v:onCollide(self)
-            end
-        end
-    end
-end
-```
-Which avoids rewriting the inner loop for each axis.
 # license
 
->Copyright 2018 'novemberisms' aka. Brian Sarfati
+>Copyright 2018 'novemberisms'
 >
 >Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
