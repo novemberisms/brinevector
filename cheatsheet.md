@@ -22,6 +22,10 @@ myVec.x
 myVec.y									
 -> 4
 
+-- getting the length
+#myVec
+-> 5
+
 -- modifying a vector
 myVec.x = -100							
 myVec.y = 25.5
@@ -94,6 +98,15 @@ myVec.inverse
 myVec.copy
 -> "Vector{6.0000,8.0000}"
 
+-- get the floor of a vector
+local fracVec = Vector(1.234, 5.678)
+fracVec.floor
+-> "Vector{1.0000,5.0000}"
+
+-- get the ceil of a vector
+fracVec.ceil
+-> "Vector{2.0000,6.0000}"
+
 -- chaining properties
 myVec.normalized.length					
 -> 1.000000023841858
@@ -132,6 +145,14 @@ a:getInverse()
 a:getCopy()
 -> "Vector{5.0000,5.0000}
 
+-- equivalent to a.floor
+a:getFloor()
+-> "Vector{5.0000,5.0000}"
+
+-- equivalent to a.ceil
+a:getCeil()
+-> "Vector{5.0000,5.0000}"
+
 -- vector that would result from rotating 'a' to 0 degrees
 a:angled(0)								
 -> "Vector{7.0711,0.0000}"
@@ -151,6 +172,13 @@ a:trim(100)
 -- componentwise multiplication
 a:hadamard(Vector(2,3))					
 -> "Vector{10.0000,15.0000}"
+
+-- clamping a vector between two bounding vectors
+local topleft = Vector(0, 0)
+local botright = Vector(10, 10)
+local b = Vector(-100, 300)
+b:clamp(topleft, botright)
+-> "Vector{0.0000,10.0000}"
 ```
 ##### Method Shortcuts
 ```lua
