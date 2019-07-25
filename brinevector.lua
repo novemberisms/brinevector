@@ -148,9 +148,9 @@ function Vector.hadamard(v1, v2) -- also known as "Componentwise multiplication"
 end
 
 function Vector.rotated(v, angle)
-  local length = v.length
-  local new_angle = v.angle + angle
-  return Vector(math.cos(new_angle) * length, math.sin(new_angle) * length)
+  local cos = math.cos(angle)
+  local sin = math.sin(angle)
+  return Vector(v.x * cos - v.y * sin, v.x * sin + v.y * cos)
 end
 
 local iteraxes_lookup = {
