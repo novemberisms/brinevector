@@ -193,14 +193,32 @@ else
 end
 
 function Vector.__add(v1, v2)
+  if type(v1) ~= VECTORTYPE then
+    error("Cannot add a vector to a " .. type(v1) .. " value", 2)
+  end
+  if type(v2) ~= VECTORTYPE then
+    error("Cannot add a " .. type(v2) .. " value to a vector", 2)
+  end
   return Vector(v1.x + v2.x, v1.y + v2.y)
 end
 
 function Vector.__sub(v1, v2)
+  if type(v1) ~= VECTORTYPE then
+    error("Cannot subtract a vector from a " .. type(v1) .. " value", 2)
+  end
+  if type(v2) ~= VECTORTYPE then
+    error("Cannot subtract a " .. type(v2) .. " value from a vector", 2)
+  end
   return Vector(v1.x - v2.x, v1.y - v2.y)
 end
 
 function Vector.__mul(v1, op)
+  if type(v1) ~= VECTORTYPE and type(v1) ~= "number" then
+    error("Cannot multiply a vector by a " .. type(v1) .. " value", 2)
+  end
+  if type(op) ~= VECTORTYPE and type(op) ~= "number" then
+    error("Cannot multiply a vector by a " .. type(op) .. " value", 2)
+  end
   -- acts as a dot multiplication if op is a vector
   -- if op is a scalar then works as usual
   if type(v1) == "number" then
@@ -214,12 +232,17 @@ function Vector.__mul(v1, op)
 end
 
 function Vector.__div(v1, op)
+  if type(v1) ~= VECTORTYPE then
+    error("Cannot divide a " .. type(v1) .. " value by a vector", 2)
+  end
   if type(op) == "number" then
-    if op == 0 then error("Vector NaN occured", 2) end
+    if op == 0 then error("Cannot divide a vector by zero", 2) end
     return Vector(v1.x / op, v1.y / op)
   elseif type(op) == VECTORTYPE then
-    if op.x * op.y == 0 then error("Vector NaN occured", 2) end
+    if op.x * op.y == 0 then error("Cannot divide a vector by a vector with a zero component", 2) end
     return Vector(v1.x / op.x, v1.y / op.y)
+  else
+    error("Cannot divide a vector by a " .. type(op) .. " value", 2)
   end
 end
 
