@@ -1,4 +1,9 @@
--- LAST UPDATED: 9/25/18
+-- LAST UPDATED: 08/22/2022
+-- hadamard product is now done with a default * operator
+-- dot product is now done with Vector.dot
+-- better error messages (thanks to Andrew Minnich)
+
+-- 9/25/18
 -- added Vector.getCeil and v.ceil
 -- added Vector.clamp
 -- changed float to double as per Mike Pall's advice

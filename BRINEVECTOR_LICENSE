@@ -1,6 +1,6 @@
 BrineVector: a luajit ffi-accelerated vector library
 
-Copyright 2018 Brian Sarfati
+Copyright 2022 Brian Sarfati
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 and associated documentation files (the "Software"), to deal in the Software without restriction, 
