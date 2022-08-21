@@ -46,7 +46,6 @@ For beginners, or for anyone who wants more details, read the sections down belo
 	  -	[Addition and Subtraction](#addition-and-Subtraction)
 	  -	[Multiplication with a scalar](#multiplication-with-a-scalar)
 	  -	[Multiplication with another vector](#multiplication-with-another-vector)
-	  -	[Hadamard Product](#hadamard-product)
 	  -	[Division with a scalar](#division-with-a-scalar)
 	  -	[Division with a vector](#division-with-a-vector)
 	  -	[Negation](#negation)
@@ -68,6 +67,7 @@ For beginners, or for anyone who wants more details, read the sections down belo
 	  -	[`getCopy()`](#property-methods)
 	  -	[`getFloor()`](#property-methods)
 	  -	[`getCeil()`](#property-methods)
+	  - [`dot(vector)`](#dot)
 	  -	[`angled(theta)`](#angled)
 	  -	[`rotated(theta)`](#rotated)
 	  -	[`trim(length)`](#trim)
@@ -168,7 +168,7 @@ local a = Vector(3,4)
 local b = Vector(4,-2)
 local c = a * b  -- c becomes <12,-8>
 ```
-You can also do a:hadamard(b) if you care about accurate mathematical terminology. It works the same.
+You can also do `a:hadamard(b)` if you care about accurate mathematical terminology. It works the same.
 ### Division with a scalar
 Dividing a vector `V` with a scalar `x`, is exactly equivalent to multiplying `V` with `1/x`. Thus,
 ```lua
@@ -396,7 +396,7 @@ This returns a vector that is the result of a component-wise multiplication betw
 ```lua
 a = Vector( b.x * c.x, b.y * c.y )
 ```
-Alternatively, you can use `a = b % c`.
+Alternatively, you can use `a = b * c`.
 
 ### split
 ###### `myVec:split( )`
