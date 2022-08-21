@@ -49,13 +49,13 @@ a - b
 a * 2									
 -> "Vector{2.0000,4.0000}"
 
--- dot multiplication
-a * b									
--> 11
-
 -- componentwise multiplication
-a % b									
+a * b									
 -> "Vector{3.0000,8.0000}
+
+-- dot multiplication
+a:dot(b)									
+-> 11
 
 -- scalar division
 a / 2									
@@ -68,6 +68,15 @@ a / b
 -- unary negation
 -a										
 -> "Vector{-1.0000,-2.0000}"
+
+-- modulo
+b % 2
+-> "Vector{1.0000,0.0000}"
+
+Vector(10,7) % b
+-> "Vector{1.0000,3.0000}"
+
+
 ```
 ##### Properties
 ```lua
@@ -217,7 +226,7 @@ a == Vector(3,2)
 Vector.isVector(a)						
 -> true
 
--- no silly type coercion
+-- no silly type coercion (ONLY IF FFI IS ENABLED)
 Vector.isVector({x = 1, y = 2})			
 -> false
 ```

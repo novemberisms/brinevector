@@ -153,6 +153,10 @@ function Vector.rotated(v, angle)
   return Vector(v.x * cos - v.y * sin, v.x * sin + v.y * cos)
 end
 
+function Vector.dot(v1, v2)
+  return v1.x * v2.x + v1.y * v2.y
+end
+
 local iteraxes_lookup = {
   xy = {"x","y"},
   yx = {"y","x"}
@@ -213,22 +217,20 @@ function Vector.__sub(v1, v2)
 end
 
 function Vector.__mul(v1, op)
+  -- performs component-wise multiplication (hadamard product)
   if type(v1) ~= VECTORTYPE and type(v1) ~= "number" then
     error("Cannot multiply a vector by a " .. type(v1) .. " value", 2)
   end
   if type(op) ~= VECTORTYPE and type(op) ~= "number" then
     error("Cannot multiply a vector by a " .. type(op) .. " value", 2)
   end
-  -- acts as a dot multiplication if op is a vector
-  -- if op is a scalar then works as usual
   if type(v1) == "number" then
-    return Vector(op.x * v1, op.y * v1)
+    v1, op = op, v1
   end
-  if type(op) == VECTORTYPE then
-    return v1.x * op.x + v1.y * op.y
-  else
+  if type(op) == "number" then
     return Vector(v1.x * op, v1.y * op)
   end
+  return Vector(v1.x * op.x, v1.y * op.y)
 end
 
 function Vector.__div(v1, op)
@@ -255,8 +257,14 @@ function Vector.__eq(v1,v2)
   return v1.x == v2.x and v1.y == v2.y
 end
 
-function Vector.__mod(v1,v2)  -- ran out of symbols, so i chose % for the hadamard product
-  return Vector(v1.x * v2.x, v1.y * v2.y) 
+function Vector.__mod(v1,v2) 
+  if type(v1) == "number" then
+    return Vector(v1 % v2.x, v1 % v2.y)
+  end
+  if type(v2) == "number" then
+    return Vector(v1.x % v2, v1.y % v2)
+  end
+  return Vector(v1.x % v2.x, v1.y % v2.y) 
 end
 
 function Vector.__tostring(t)

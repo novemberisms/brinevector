@@ -162,27 +162,13 @@ a * -1          -- returns <-3,-4>
 local c = a * 2 -- instantiates a new vector with values <6,8>
 ```
 ### Multiplication with another vector
-Multiplying two vectors together with the operator `*` performs the [dot product](https://en.wikipedia.org/wiki/Dot_product), which returns a single number.
-```lua
-local a = Vector(1,2)
-local b = Vector(3,4)
-a * b   -- results with (a.x * b.x) + (a.y * b.y), which is 11
-```
-### Hadamard product
-In some cases, you might want to get a vector whose x component is the product of two other vectors' x components, and whose y component is the product of their y components. (ie. "Component-wise" or "Freshman" multiplication)
+In some cases, you might want to get a vector whose x component is the product of two other vectors' x components, and whose y component is the product of their y components. (ie. "Component-wise" or "Freshman" multiplication). This is supported with a simple * syntax
 ```lua
 local a = Vector(3,4)
-local b = Vector(1,-1)
-local c = Vector(a.x * b.x, a.y * b.y)  -- c becomes <3,-4>
+local b = Vector(4,-2)
+local c = a * b  -- c becomes <12,-8>
 ```
-There really isn't a predefined mathematical symbol for this, so I chose the `%` operator, as it has no uses with vectors otherwise. Thus the above example can also be written more succinctly as
-```lua
-local c = a % b         -- c becomes <3,-4>
-```
-If that makes you uncomfortable because % to you can only mean modulo, then alternatively you can use
-```lua
-local c = a:hadamard(b) -- c becomes <3,-4>
-```
+You can also do a:hadamard(b) if you care about accurate mathematical terminology. It works the same.
 ### Division with a scalar
 Dividing a vector `V` with a scalar `x`, is exactly equivalent to multiplying `V` with `1/x`. Thus,
 ```lua
@@ -207,6 +193,22 @@ local a = Vector(3,4)
 -a      -- returns <-3,-4>
 -a * 5  -- returns <-15,-20>
 ```
+
+### Modulo
+A vector can be made to undergo a modulo operation with either a scalar or another vector. 
+```lua
+-- with scalar
+local a = Vector(10, 4)
+local b = a % 3 -- b is <1, 1>
+local c = 33 % a -- c is <3, 1>
+
+-- with vector
+local x = Vector(13, 17)
+local y = Vector(2, 3)
+x % y -- result is <1, 2>
+```
+Note that the result will be different if you swap the values of the two operands. (In other words, x % y is not the same as y % x, and this is also applies to vectors under this operation)
+
 ## Vector properties
 For maximum convenience and ease of use, the most common properties of a vector are accessed just like any members of a table, **_without having to call any methods_** like in other libraries.
 
@@ -318,6 +320,17 @@ If you prefer getting the above properties with methods instead like in other li
 -   `myVec:getCopy()`	-- equivalent to `myVec.copy`
 -   `myVec:getFloor()`   -- equivalent to `myVec.floor`
 -   `myVec:getCeil()`   -- equivalent to `myVec.ceil`
+
+### dot
+###### `myVec:dot( vector )`
+This returns a scalar which is the "dot" product with another vector. The formula is as follows:
+```lua
+-- A dot product of two vectors A and B is equal to (A.x * B.x) + (A.y * B.y)
+local a = Vector(3,4)
+local b = Vector(6,3)
+local result = a:dot(b) -- result is 30
+assert(result == a.x * b.x + a.y * b.y)
+```
 
 ### angled
 ###### `myVec:angled( angle )`
